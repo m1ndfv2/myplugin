@@ -13,8 +13,6 @@ import dev.osunolimits.modules.Shiina;
 import dev.osunolimits.modules.ShiinaRoute;
 import dev.osunolimits.modules.ShiinaRoute.ShiinaRequest;
 import dev.osunolimits.modules.utils.SEOBuilder;
-import dev.osunolimits.plugins.ShiinaRegistry;
-import dev.osunolimits.plugins.events.admin.OnAddDonorEvent;
 import dev.osunolimits.plugins.models.NavbarItem;
 import dev.osunolimits.utils.osu.PermissionHelper;
 import dev.osunolimits.utils.osu.PermissionHelper.Privileges;
@@ -176,8 +174,6 @@ public class SupporterKeysRoute extends Shiina {
                 shiina.data.put("statusError", "Supporter granted, but key state update failed. Check database.");
                 return;
             }
-
-            ShiinaRegistry.fireEvent(new OnAddDonorEvent(durationDays + "d", shiina.user.id, 0));
             shiina.data.put("statusMessage", "Success! Supporter activated for " + durationDays + " day(s).");
         } catch (Exception ex) {
             shiina.data.put("statusError", "Redemption failed: " + ex.getMessage());
