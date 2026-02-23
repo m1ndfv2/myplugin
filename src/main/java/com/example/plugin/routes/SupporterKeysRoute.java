@@ -59,7 +59,7 @@ public class SupporterKeysRoute extends Shiina {
 
         try {
             ResultSet keyRs = shiina.mysql.Query(
-                "SELECT `id`, `duration_days`, `used_by` FROM `supporter_keys` WHERE `code` = ? LIMIT 1",
+                "SELECT `id`, `duration_days` FROM `supporter_keys` WHERE `code` = ? LIMIT 1",
                 code
             );
 
@@ -70,13 +70,6 @@ public class SupporterKeysRoute extends Shiina {
 
             int keyId = keyRs.getInt("id");
             int durationDays = keyRs.getInt("duration_days");
-            int usedBy = keyRs.getInt("used_by");
-
-            if (usedBy > 0) {
-                shiina.data.put("statusError", "This key has already been used.");
-                return;
-            }
-
             ResultSet userRs = shiina.mysql.Query(
                 "SELECT `priv`, `donor_end` FROM `users` WHERE `id` = ? LIMIT 1",
                 shiina.user.id
@@ -95,6 +88,18 @@ public class SupporterKeysRoute extends Shiina {
             int baseTs = Math.max(now, oldDonorEnd);
             int newDonorEnd = baseTs + (durationDays * 86400);
 
+            int claimedKey = shiina.mysql.Exec(
+                "UPDATE `supporter_keys` SET `used_by` = ?, `used_at` = ? WHERE `id` = ? AND `used_by` = 0",
+                shiina.user.id,
+                now,
+                keyId
+            );
+
+            if (claimedKey <= 0) {
+                shiina.data.put("statusError", "This key has already been used.");
+                return;
+            }
+
             int updatedUser = shiina.mysql.Exec(
                 "UPDATE `users` SET `priv` = ?, `donor_end` = ? WHERE `id` = ?",
                 newPriv,
@@ -103,19 +108,13 @@ public class SupporterKeysRoute extends Shiina {
             );
 
             if (updatedUser < 0) {
+                shiina.mysql.Exec(
+                    "UPDATE `supporter_keys` SET `used_by` = 0, `used_at` = 0 WHERE `id` = ? AND `used_by` = ? AND `used_at` = ?",
+                    keyId,
+                    shiina.user.id,
+                    now
+                );
                 shiina.data.put("statusError", "Could not update user privileges.");
-                return;
-            }
-
-            int updatedKey = shiina.mysql.Exec(
-                "UPDATE `supporter_keys` SET `used_by` = ?, `used_at` = ? WHERE `id` = ?",
-                shiina.user.id,
-                now,
-                keyId
-            );
-
-            if (updatedKey < 0) {
-                shiina.data.put("statusError", "Supporter granted, but key state update failed. Check database.");
                 return;
             }
 
