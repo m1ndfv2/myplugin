@@ -40,6 +40,8 @@ public class Plugin extends ShiinaPlugin {
         SupporterKeysAdminRoute adminRoute = new SupporterKeysAdminRoute(adminNavItem);
         WebServer.get("/supporter-keys/admin", adminRoute);
         WebServer.post("/supporter-keys/admin", adminRoute);
+        WebServer.get("/admin/supporter-keys", adminRoute);
+        WebServer.post("/admin/supporter-keys", adminRoute);
     }
 
     @Override
