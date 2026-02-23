@@ -67,4 +67,16 @@
         </div>
     </#if>
 </div>
+<script>
+    console.info("[supporter-admin] page loaded");
+    <#if statusMessage??>
+    console.info("[supporter-admin] statusMessage:", ${statusMessage?json_string});
+    </#if>
+    <#if statusError??>
+    console.error("[supporter-admin] statusError:", ${statusError?json_string});
+    </#if>
+    <#if newKeys??>
+    console.info("[supporter-admin] new keys generated:", ${newKeys?size});
+    </#if>
+</script>
 <#include "../../../assets/footer.html">
