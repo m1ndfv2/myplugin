@@ -8,6 +8,7 @@ import dev.osunolimits.main.App;
 import dev.osunolimits.modules.Shiina;
 import dev.osunolimits.modules.ShiinaRoute;
 import dev.osunolimits.modules.ShiinaRoute.ShiinaRequest;
+import dev.osunolimits.modules.pubsubs.SyncedAction;
 import dev.osunolimits.modules.utils.SEOBuilder;
 import dev.osunolimits.plugins.models.NavbarItem;
 import dev.osunolimits.utils.osu.PermissionHelper;
