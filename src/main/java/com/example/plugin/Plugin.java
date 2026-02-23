@@ -5,7 +5,6 @@ import com.example.plugin.routes.SupporterKeysRoute;
 import ch.qos.logback.classic.Logger;
 import dev.osunolimits.main.WebServer;
 import dev.osunolimits.plugins.NavbarRegister;
-import dev.osunolimits.plugins.PluginAutorunSQL;
 import dev.osunolimits.plugins.ShiinaEventListener;
 import dev.osunolimits.plugins.ShiinaPlugin;
 import dev.osunolimits.plugins.ShiinaRegistry;
