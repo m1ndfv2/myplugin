@@ -33,8 +33,6 @@ public class Plugin extends ShiinaPlugin {
         NavbarRegister.register(navItem);
         NavbarRegister.registerAdmin(adminNavItem);
 
-        new PluginAutorunSQL(logger).loadfromPlugin(getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
-
         SupporterKeysRoute route = new SupporterKeysRoute(navItem);
         WebServer.get("/supporter-keys", route);
         WebServer.post("/supporter-keys", route);
