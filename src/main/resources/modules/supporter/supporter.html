@@ -27,4 +27,13 @@
         </div>
     </#if>
 </div>
+<script>
+    console.info("[supporter] activation page loaded");
+    <#if statusMessage??>
+    console.info("[supporter] statusMessage:", ${statusMessage?json_string});
+    </#if>
+    <#if statusError??>
+    console.error("[supporter] statusError:", ${statusError?json_string});
+    </#if>
+</script>
 <#include "../../../assets/footer.html">
