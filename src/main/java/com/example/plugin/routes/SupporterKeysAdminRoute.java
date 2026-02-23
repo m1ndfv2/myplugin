@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.example.plugin.Plugin;
 import dev.osunolimits.main.App;
 import dev.osunolimits.modules.Shiina;
 import dev.osunolimits.modules.ShiinaRoute;
@@ -61,6 +62,15 @@ public class SupporterKeysAdminRoute extends Shiina {
             return;
         }
 
+        if (Plugin.pluginLogger != null) {
+            Plugin.pluginLogger.info(
+                "Starting supporter key generation: amount={}, durationDays={}, requestedBy={}",
+                amount,
+                durationDays,
+                shiina.user != null ? shiina.user.id : 0
+            );
+        }
+
         List<String> created = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
             String code = UUID.randomUUID().toString().replace("-", "").toUpperCase();
@@ -76,7 +86,25 @@ public class SupporterKeysAdminRoute extends Shiina {
 
             if (inserted != -1) {
                 created.add(code);
+                if (Plugin.pluginLogger != null) {
+                    Plugin.pluginLogger.info(
+                        "Generated supporter key: code={}, durationDays={}, createdBy={}",
+                        code,
+                        durationDays,
+                        shiina.user != null ? shiina.user.id : 0
+                    );
+                }
             }
+        }
+
+        if (Plugin.pluginLogger != null) {
+            Plugin.pluginLogger.info(
+                "Supporter key generation finished: generated={}, requestedAmount={}, durationDays={}, requestedBy={}",
+                created.size(),
+                amount,
+                durationDays,
+                shiina.user != null ? shiina.user.id : 0
+            );
         }
 
         shiina.data.put("statusMessage", "Generated " + created.size() + " key(s) for " + durationDays + " day(s).");
