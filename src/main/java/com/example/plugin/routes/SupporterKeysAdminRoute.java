@@ -34,7 +34,7 @@ public class SupporterKeysAdminRoute extends Shiina {
         if (!canManageSupporterKeys(shiina)) {
             res.status(403);
             shiina.data.put("statusError", "Only administrators can access this page.");
-            return renderTemplate("modules/supporter/supporter-admin.html", shiina, res, req);
+            return renderAdminTemplate(shiina, res, req);
         }
 
         if ("POST".equalsIgnoreCase(req.requestMethod())) {
@@ -45,7 +45,7 @@ public class SupporterKeysAdminRoute extends Shiina {
         shiina.data.put("seo", new SEOBuilder("Supporter Keys Admin", App.customization.get("homeDescription").toString()));
         shiina.data.put("generatedKeys", loadGeneratedKeys(shiina));
 
-        return renderTemplate("modules/supporter/supporter-admin.html", shiina, res, req);
+        return renderAdminTemplate(shiina, res, req);
     }
 
     private void handleGenerate(Request req, ShiinaRequest shiina) {
@@ -136,6 +136,26 @@ public class SupporterKeysAdminRoute extends Shiina {
         }
 
         return keys;
+    }
+
+    private Object renderAdminTemplate(ShiinaRequest shiina, Response res, Request req) throws Exception {
+        try {
+            return renderTemplate("modules/supporter/supporter-admin.html", shiina, res, req);
+        } catch (Exception primaryError) {
+            if (Plugin.pluginLogger != null) {
+                Plugin.pluginLogger.warn("Primary admin template missing, trying legacy path: {}", primaryError.getMessage());
+            }
+
+            try {
+                return renderTemplate("modules/plugins/supporter/supporter-admin.html", shiina, res, req);
+            } catch (Exception legacyError) {
+                if (Plugin.pluginLogger != null) {
+                    Plugin.pluginLogger.warn("Legacy admin template missing, falling back to admin/supporter-keys.html: {}", legacyError.getMessage());
+                }
+
+                return renderTemplate("admin/supporter-keys.html", shiina, res, req);
+            }
+        }
     }
 
     private boolean canManageSupporterKeys(ShiinaRequest shiina) {

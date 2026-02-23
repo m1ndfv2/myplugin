@@ -35,7 +35,19 @@ public class SupporterKeysRoute extends Shiina {
         shiina.data.put("seo", new SEOBuilder("Supporter Keys", App.customization.get("homeDescription").toString()));
         shiina.data.put("canManageSupporterKeys", canManageSupporterKeys(shiina));
 
-        return renderTemplate("modules/supporter/supporter.html", shiina, res, req);
+        return renderUserTemplate(shiina, res, req);
+    }
+
+    private Object renderUserTemplate(ShiinaRequest shiina, Response res, Request req) throws Exception {
+        try {
+            return renderTemplate("modules/supporter/supporter.html", shiina, res, req);
+        } catch (Exception primaryError) {
+            if (Plugin.pluginLogger != null) {
+                Plugin.pluginLogger.warn("Primary user template missing, trying legacy path: {}", primaryError.getMessage());
+            }
+
+            return renderTemplate("modules/plugins/supporter/supporter.html", shiina, res, req);
+        }
     }
 
     private void handleRedeem(Request req, ShiinaRequest shiina) {
