@@ -1,5 +1,6 @@
 package com.example.plugin;
 
+import com.example.plugin.routes.SupporterKeysAdminRoute;
 import com.example.plugin.routes.SupporterKeysRoute;
 
 import ch.qos.logback.classic.Logger;
@@ -24,7 +25,7 @@ public class Plugin extends ShiinaPlugin {
         NavbarItem navItem = new NavbarItem("Supporter Keys", "supporter-keys");
         NavbarAdminItem adminNavItem = new NavbarAdminItem(
             "Supporter Keys",
-            "supporter-keys",
+            "supporter-keys-admin",
             "fa-solid fa-key",
             Privileges.ADMINISTRATOR
         );
@@ -32,9 +33,13 @@ public class Plugin extends ShiinaPlugin {
         NavbarRegister.register(navItem);
         NavbarRegister.registerAdmin(adminNavItem);
 
-        SupporterKeysRoute route = new SupporterKeysRoute(navItem);
-        WebServer.get("/supporter-keys", route);
-        WebServer.post("/supporter-keys", route);
+        SupporterKeysRoute userRoute = new SupporterKeysRoute(navItem);
+        WebServer.get("/supporter-keys", userRoute);
+        WebServer.post("/supporter-keys", userRoute);
+
+        SupporterKeysAdminRoute adminRoute = new SupporterKeysAdminRoute(adminNavItem);
+        WebServer.get("/supporter-keys/admin", adminRoute);
+        WebServer.post("/supporter-keys/admin", adminRoute);
     }
 
     @Override
