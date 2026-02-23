@@ -8,6 +8,7 @@ import dev.osunolimits.main.App;
 import dev.osunolimits.modules.Shiina;
 import dev.osunolimits.modules.ShiinaRoute;
 import dev.osunolimits.modules.ShiinaRoute.ShiinaRequest;
+import dev.osunolimits.modules.pubsubs.SyncedAction;
 import dev.osunolimits.modules.utils.SEOBuilder;
 import dev.osunolimits.plugins.models.NavbarItem;
 import dev.osunolimits.utils.osu.PermissionHelper;
@@ -35,7 +36,7 @@ public class SupporterKeysRoute extends Shiina {
         shiina.data.put("seo", new SEOBuilder("Supporter Keys", App.customization.get("homeDescription").toString()));
         shiina.data.put("canManageSupporterKeys", canManageSupporterKeys(shiina));
 
-        return renderTemplate("modules/plugins/supporter/supporter.html", shiina, res, req);
+        return renderTemplate("modules/supporter/supporter.html", shiina, res, req);
     }
 
     private void handleRedeem(Request req, ShiinaRequest shiina) {
@@ -89,9 +90,8 @@ public class SupporterKeysRoute extends Shiina {
             int now = (int) Instant.now().getEpochSecond();
 
             int claimResult = shiina.mysql.Exec(
-                "UPDATE `supporter_keys` SET `used_by` = ?, `used_at` = ? WHERE `id` = ? AND (`used_by` = 0 OR `used_by` IS NULL)",
+                "UPDATE `supporter_keys` SET `used_by` = ?, `used_at` = NOW() WHERE `id` = ? AND (`used_by` = 0 OR `used_by` IS NULL)",
                 shiina.user.id,
-                now,
                 keyId
             );
 
@@ -139,6 +139,10 @@ public class SupporterKeysRoute extends Shiina {
                 }
                 shiina.data.put("statusError", "Could not update user privileges.");
                 return;
+            }
+
+            if (App.jedisPool != null) {
+                SyncedAction.addPriv(shiina.user.id, new String[] { "supporter" });
             }
 
             ResultSet userAfterRs = shiina.mysql.Query(
