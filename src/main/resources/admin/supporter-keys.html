@@ -1,0 +1,78 @@
+<#attempt>
+    <#include "/assets/base.html">
+<#recover>
+    <#include "../assets/base.html">
+</#attempt>
+<div class="container py-4">
+    <h2 class="mb-3">Supporter keys admin</h2>
+
+    <#if statusMessage??>
+        <div class="alert alert-success">${statusMessage}</div>
+    </#if>
+
+    <#if statusError??>
+        <div class="alert alert-danger">${statusError}</div>
+    </#if>
+
+    <form method="post" action="/admin/supporter-keys" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label for="amount" class="form-label">Amount</label>
+            <input type="number" id="amount" name="amount" class="form-control" min="1" max="500" value="25" required />
+        </div>
+        <div class="col-md-3">
+            <label for="durationDays" class="form-label">Duration (days)</label>
+            <input type="number" id="durationDays" name="durationDays" class="form-control" min="1" max="3650" value="30" required />
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-warning" type="submit">Generate</button>
+        </div>
+    </form>
+
+    <#if newKeys?? && newKeys?size gt 0>
+        <div class="card mt-3">
+            <div class="card-header">Newly generated keys</div>
+            <div class="card-body">
+                <#list newKeys as key>
+                    <code>${key}</code><br />
+                </#list>
+            </div>
+        </div>
+    </#if>
+
+    <#if generatedKeys?? && generatedKeys?size gt 0>
+        <div class="card mt-3">
+            <div class="card-header">Last 100 keys</div>
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Days</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <#list generatedKeys as key>
+                            <tr>
+                                <td><code>${key.code}</code></td>
+                                <td>${key.durationDays}</td>
+                                <td>
+                                    <#if key.usedBy?number gt 0>
+                                        Used by user #${key.usedBy}
+                                    <#else>
+                                        Not used
+                                    </#if>
+                                </td>
+                            </tr>
+                        </#list>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </#if>
+</div>
+<#attempt>
+    <#include "/assets/footer.html">
+<#recover>
+    <#include "../assets/footer.html">
+</#attempt>
