@@ -3,6 +3,7 @@ package com.example.plugin.routes;
 import java.sql.ResultSet;
 import java.time.Instant;
 
+import com.example.plugin.Plugin;
 import dev.osunolimits.main.App;
 import dev.osunolimits.modules.Shiina;
 import dev.osunolimits.modules.ShiinaRoute;
@@ -40,49 +41,60 @@ public class SupporterKeysRoute extends Shiina {
     private void handleRedeem(Request req, ShiinaRequest shiina) {
         String action = req.queryParams("action");
         if (!"redeem".equalsIgnoreCase(action)) {
+            if (Plugin.pluginLogger != null) {
+                Plugin.pluginLogger.warn("Supporter redeem rejected: unknown action='{}' userId={}", action, shiina.user != null ? shiina.user.id : 0);
+            }
             shiina.data.put("statusError", "Unknown action.");
             return;
         }
 
         if (!shiina.loggedIn || shiina.user == null) {
+            if (Plugin.pluginLogger != null) {
+                Plugin.pluginLogger.warn("Supporter redeem rejected: anonymous user attempted activation.");
+            }
             shiina.data.put("statusError", "You must be logged in to redeem a key.");
             return;
         }
 
         String code = req.queryParams("code");
         if (code == null || code.isBlank()) {
+            if (Plugin.pluginLogger != null) {
+                Plugin.pluginLogger.warn("Supporter redeem rejected: empty key userId={}", shiina.user.id);
+            }
             shiina.data.put("statusError", "Key cannot be empty.");
             return;
         }
 
         code = code.trim().toUpperCase();
+        if (Plugin.pluginLogger != null) {
+            Plugin.pluginLogger.info("Supporter redeem started: userId={} code={}", shiina.user.id, code);
+        }
 
         try {
             ResultSet keyRs = shiina.mysql.Query(
-                "SELECT `id`, `duration_days`, `used_by` FROM `supporter_keys` WHERE `code` = ? LIMIT 1",
+                "SELECT `id`, `duration_days` FROM `supporter_keys` WHERE `code` = ? LIMIT 1",
                 code
             );
 
             if (keyRs == null || !keyRs.next()) {
+                if (Plugin.pluginLogger != null) {
+                    Plugin.pluginLogger.warn("Supporter redeem failed: invalid key userId={} code={}", shiina.user.id, code);
+                }
                 shiina.data.put("statusError", "Invalid key.");
                 return;
             }
 
             int keyId = keyRs.getInt("id");
             int durationDays = keyRs.getInt("duration_days");
-            int usedBy = keyRs.getInt("used_by");
-
-            if (usedBy > 0) {
-                shiina.data.put("statusError", "This key has already been used.");
-                return;
-            }
-
             ResultSet userRs = shiina.mysql.Query(
                 "SELECT `priv`, `donor_end` FROM `users` WHERE `id` = ? LIMIT 1",
                 shiina.user.id
             );
 
             if (userRs == null || !userRs.next()) {
+                if (Plugin.pluginLogger != null) {
+                    Plugin.pluginLogger.warn("Supporter redeem failed: user row not found userId={} code={}", shiina.user.id, code);
+                }
                 shiina.data.put("statusError", "User not found.");
                 return;
             }
@@ -95,6 +107,34 @@ public class SupporterKeysRoute extends Shiina {
             int baseTs = Math.max(now, oldDonorEnd);
             int newDonorEnd = baseTs + (durationDays * 86400);
 
+            int claimedKey = shiina.mysql.Exec(
+                "UPDATE `supporter_keys` SET `used_by` = ?, `used_at` = ? WHERE `id` = ? AND (`used_by` = 0 OR `used_by` IS NULL)",
+                shiina.user.id,
+                now,
+                keyId
+            );
+
+            if (claimedKey < 0) {
+                if (Plugin.pluginLogger != null) {
+                    Plugin.pluginLogger.error("Supporter redeem failed: DB claim error userId={} code={}", shiina.user.id, code);
+                }
+                shiina.data.put("statusError", "Could not claim key.");
+                return;
+            }
+
+            ResultSet claimRs = shiina.mysql.Query(
+                "SELECT `used_by` FROM `supporter_keys` WHERE `id` = ? LIMIT 1",
+                keyId
+            );
+
+            if (claimRs == null || !claimRs.next() || claimRs.getInt("used_by") != shiina.user.id) {
+                if (Plugin.pluginLogger != null) {
+                    Plugin.pluginLogger.warn("Supporter redeem failed: key already used userId={} code={}", shiina.user.id, code);
+                }
+                shiina.data.put("statusError", "This key has already been used.");
+                return;
+            }
+
             int updatedUser = shiina.mysql.Exec(
                 "UPDATE `users` SET `priv` = ?, `donor_end` = ? WHERE `id` = ?",
                 newPriv,
@@ -103,24 +143,34 @@ public class SupporterKeysRoute extends Shiina {
             );
 
             if (updatedUser < 0) {
+                shiina.mysql.Exec(
+                    "UPDATE `supporter_keys` SET `used_by` = 0, `used_at` = 0 WHERE `id` = ? AND `used_by` = ? AND `used_at` = ?",
+                    keyId,
+                    shiina.user.id,
+                    now
+                );
+                if (Plugin.pluginLogger != null) {
+                    Plugin.pluginLogger.error("Supporter redeem failed: user update error userId={} code={}", shiina.user.id, code);
+                }
                 shiina.data.put("statusError", "Could not update user privileges.");
                 return;
             }
 
-            int updatedKey = shiina.mysql.Exec(
-                "UPDATE `supporter_keys` SET `used_by` = ?, `used_at` = ? WHERE `id` = ?",
-                shiina.user.id,
-                now,
-                keyId
-            );
-
-            if (updatedKey < 0) {
-                shiina.data.put("statusError", "Supporter granted, but key state update failed. Check database.");
-                return;
+            if (Plugin.pluginLogger != null) {
+                Plugin.pluginLogger.info(
+                    "Supporter redeem success: userId={} code={} durationDays={} oldDonorEnd={} newDonorEnd={}",
+                    shiina.user.id,
+                    code,
+                    durationDays,
+                    oldDonorEnd,
+                    newDonorEnd
+                );
             }
-
             shiina.data.put("statusMessage", "Success! Supporter activated for " + durationDays + " day(s).");
         } catch (Exception ex) {
+            if (Plugin.pluginLogger != null) {
+                Plugin.pluginLogger.error("Supporter redeem exception: userId={} code={} error={}", shiina.user.id, code, ex.getMessage());
+            }
             shiina.data.put("statusError", "Redemption failed: " + ex.getMessage());
         }
     }
