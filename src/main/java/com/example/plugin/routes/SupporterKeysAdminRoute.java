@@ -34,7 +34,7 @@ public class SupporterKeysAdminRoute extends Shiina {
         if (!canManageSupporterKeys(shiina)) {
             res.status(403);
             shiina.data.put("statusError", "Only administrators can access this page.");
-            return renderTemplate("admin/supporter-keys.html", shiina, res, req);
+            return renderTemplate("modules/plugins/supporter/supporter-admin.html", shiina, res, req);
         }
 
         if ("POST".equalsIgnoreCase(req.requestMethod())) {
@@ -45,7 +45,7 @@ public class SupporterKeysAdminRoute extends Shiina {
         shiina.data.put("seo", new SEOBuilder("Supporter Keys Admin", App.customization.get("homeDescription").toString()));
         shiina.data.put("generatedKeys", loadGeneratedKeys(shiina));
 
-        return renderTemplate("admin/supporter-keys.html", shiina, res, req);
+        return renderTemplate("modules/plugins/supporter/supporter-admin.html", shiina, res, req);
     }
 
     private void handleGenerate(Request req, ShiinaRequest shiina) {
