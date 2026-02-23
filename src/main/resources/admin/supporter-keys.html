@@ -1,4 +1,8 @@
-<#include "/assets/base.html">
+<#attempt>
+    <#include "/assets/base.html">
+<#recover>
+    <#include "../assets/base.html">
+</#attempt>
 <div class="container py-4">
     <h2 class="mb-3">Supporter keys admin</h2>
 
@@ -67,4 +71,8 @@
         </div>
     </#if>
 </div>
-<#include "/assets/footer.html">
+<#attempt>
+    <#include "/assets/footer.html">
+<#recover>
+    <#include "../assets/footer.html">
+</#attempt>
