@@ -1,0 +1,30 @@
+<#include "../../../assets/base.html">
+<div class="container py-4">
+    <h2 class="mb-3">Supporter key activation</h2>
+    <p>Enter your key to activate Supporter on your account.</p>
+
+    <#if statusMessage??>
+        <div class="alert alert-success">${statusMessage}</div>
+    </#if>
+
+    <#if statusError??>
+        <div class="alert alert-danger">${statusError}</div>
+    </#if>
+
+    <form method="post" action="/supporter-keys" class="mb-4">
+        <input type="hidden" name="action" value="redeem" />
+        <div class="mb-2">
+            <label for="code" class="form-label">Supporter key</label>
+            <input type="text" id="code" name="code" class="form-control" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX" required />
+        </div>
+        <button class="btn btn-primary" type="submit">Activate Supporter</button>
+    </form>
+
+    <#if canManageSupporterKeys?? && canManageSupporterKeys>
+        <div class="alert alert-info">
+            Admin tools moved to a separate page:
+            <a href="/admin/supporter-keys">/admin/supporter-keys</a>
+        </div>
+    </#if>
+</div>
+<#include "../../../assets/footer.html">
