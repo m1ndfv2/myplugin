@@ -1,6 +1,7 @@
 package com.example.plugin;
 
-import com.example.plugin.routes.ExampleRoute;
+import com.example.plugin.routes.SupporterKeysAdminRoute;
+import com.example.plugin.routes.SupporterKeysRoute;
 
 import ch.qos.logback.classic.Logger;
 import dev.osunolimits.main.WebServer;
@@ -10,39 +11,40 @@ import dev.osunolimits.plugins.ShiinaPlugin;
 import dev.osunolimits.plugins.ShiinaRegistry;
 import dev.osunolimits.plugins.models.NavbarAdminItem;
 import dev.osunolimits.plugins.models.NavbarItem;
-import dev.osunolimits.plugins.models.NavbarSettingsItem;
 import dev.osunolimits.utils.osu.PermissionHelper.Privileges;
 
-/**
- * Shiina Example plugin
- * You can change this and use it for creating your plugins
- */
-public class Plugin extends ShiinaPlugin
-{
-    public static Logger examplePluginLogger;
-    private ShiinaEventListener listener = new ExampleListener();
+public class Plugin extends ShiinaPlugin {
+    public static Logger pluginLogger;
+    private final ShiinaEventListener listener = new ExampleListener();
 
     @Override
     protected void onEnable(String pluginName, Logger logger) {
-        examplePluginLogger = logger;
+        pluginLogger = logger;
         ShiinaRegistry.registerListener(listener);
 
-        NavbarItem mainNavbarItem = new NavbarItem("Example", "example");
-        NavbarAdminItem adminNavItem = new NavbarAdminItem("Example", "example", "fa-solid fa-image", Privileges.ADMINISTRATOR);
-        NavbarSettingsItem settingsNavItem = new NavbarSettingsItem("Example", "example");
-        settingsNavItem.setIcon("fa-solid fa-cog");
+        NavbarItem navItem = new NavbarItem("Supporter Keys", "supporter-keys");
+        NavbarAdminItem adminNavItem = new NavbarAdminItem(
+            "Supporter Keys",
+            "supporter-keys-admin",
+            "fa-solid fa-key",
+            Privileges.ADMINISTRATOR
+        );
 
-        NavbarRegister.register(mainNavbarItem);
+        NavbarRegister.register(navItem);
         NavbarRegister.registerAdmin(adminNavItem);
-        NavbarRegister.registerSettings(settingsNavItem);
 
-        WebServer.get("/example", new ExampleRoute(mainNavbarItem));
+        SupporterKeysRoute userRoute = new SupporterKeysRoute(navItem);
+        WebServer.get("/supporter-keys", userRoute);
+        WebServer.post("/supporter-keys", userRoute);
+
+        SupporterKeysAdminRoute adminRoute = new SupporterKeysAdminRoute(adminNavItem);
+        WebServer.get("/supporter-keys/admin", adminRoute);
+        WebServer.post("/supporter-keys/admin", adminRoute);
     }
 
     @Override
     protected void onDisable(String pluginName, Logger logger) {
-        examplePluginLogger = null;
+        pluginLogger = null;
         ShiinaRegistry.unregisterListener(listener);
     }
-
 }
