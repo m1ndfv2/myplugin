@@ -142,7 +142,8 @@ public class SupporterKeysRoute extends Shiina {
             }
 
             if (App.jedisPool != null) {
-                SyncedAction.addPriv(shiina.user.id, new String[] { "supporter" });
+                String addPrivPayload = String.format("{\"id\":%d,\"privs\":[\"supporter\"]}", shiina.user.id);
+                App.jedisPool.publish("addpriv", addPrivPayload);
             }
 
             ResultSet userAfterRs = shiina.mysql.Query(
