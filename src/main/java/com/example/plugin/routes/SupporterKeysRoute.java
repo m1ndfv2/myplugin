@@ -89,13 +89,23 @@ public class SupporterKeysRoute extends Shiina {
             int newDonorEnd = baseTs + (durationDays * 86400);
 
             int claimedKey = shiina.mysql.Exec(
-                "UPDATE `supporter_keys` SET `used_by` = ?, `used_at` = ? WHERE `id` = ? AND `used_by` = 0",
+                "UPDATE `supporter_keys` SET `used_by` = ?, `used_at` = ? WHERE `id` = ? AND (`used_by` = 0 OR `used_by` IS NULL)",
                 shiina.user.id,
                 now,
                 keyId
             );
 
-            if (claimedKey <= 0) {
+            if (claimedKey < 0) {
+                shiina.data.put("statusError", "Could not claim key.");
+                return;
+            }
+
+            ResultSet claimRs = shiina.mysql.Query(
+                "SELECT `used_by` FROM `supporter_keys` WHERE `id` = ? LIMIT 1",
+                keyId
+            );
+
+            if (claimRs == null || !claimRs.next() || claimRs.getInt("used_by") != shiina.user.id) {
                 shiina.data.put("statusError", "This key has already been used.");
                 return;
             }
