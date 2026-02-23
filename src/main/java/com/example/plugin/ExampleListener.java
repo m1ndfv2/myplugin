@@ -2,12 +2,21 @@ package com.example.plugin;
 
 import dev.osunolimits.plugins.ShiinaEventListener;
 import dev.osunolimits.plugins.events.actions.OnRegisterEvent;
+import dev.osunolimits.plugins.events.admin.OnAddDonorEvent;
 
 public class ExampleListener extends ShiinaEventListener {
     @Override
     public void onRegisterEvent(OnRegisterEvent event) {
-        Plugin.examplePluginLogger.info("User Registered: " + event.getName());
+        Plugin.pluginLogger.info("User registered: {}", event.getName());
     }
 
-    // There are more events check it out on https://osu-nolimits.github.io/wiki/plugins/
+    @Override
+    public void onAddDonorEvent(OnAddDonorEvent event) {
+        Plugin.pluginLogger.info(
+            "Supporter granted: userId={}, duration={}, adminId={}",
+            event.getUserId(),
+            event.getDuration(),
+            event.getAdminId()
+        );
+    }
 }
